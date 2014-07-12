@@ -29,22 +29,32 @@ Clighter currently works only at linux platform, others have not been tested.
 
 ## Options
 
-### g:enable_clighter
-If enabled, Clighter will start with Vim, you can disable Clighter by set
-g:enable_clighter to 0
+### g:clighter_autostart
+Clighter will automatically start with Vim if set g:clighter_autostart to 1,
+otherwise, you have to manually start Clighter by ClighterEnable command.
 
 Default: `1`
 ```vim
-let g:enable_clighter = 0
+let g:clighter_autostart = 0
 ```
 
-### g:clighter_cursor_toggle_key
+### g:clighter_window_size
 
-Define the hotkey to toggle cursor highlighting function.
+Clighter uses vim regular expression engine to do syntax highlighting,
+but vim's RE engine performs very bad when there are too many rules. Clighter
+can only highlight a given region instead of whole buffer each time to get
+the good performance even when the file is very large. 
+	
+clighter_window_size < 0: highlight whole buffer.
 
-Default: `'<F3>'`
+clighter_window_size >= 0: highlight from top line number reduce 30 *
+clighter_window_size to bottom line number plug 30 * clighter_window_size of
+screen.
+
+Default: `0`
 ```vim
-let g:clighter_cursor_toggle_key = '<F3>'
+let g:clighter_window_size = -1 " whole buffer
+let g:clighter_window_size = 0 " highlight current screen of window
 ```
 
 ### g:clighter_clang_options
@@ -64,49 +74,66 @@ let g:clighter_clang_options = ['-std=c++', '-DLinux']
 If your libclang is not in default path of system, tell Clighter by this
 option.
 
-Default: `undefined`
+Default: `''`
 ```vim
 let g:clighter_libclang_file = '/usr/lib/libclang.so'
 ```
+## Commands
+
+Clighter provides command to control it
+
+* Enable Clighter
+
+	`ClighterEnable`
+
+* Disable Clighter
+
+	Notice that is will not disable the cursor highlighting.
+
+	`ClighterDisable`
+
+* Toggle cursor highlighting
+
+	`ClighterToggleCursorHL`
 
 ## Customize Colors
 
 Clighter defines the following syntax group corresponding to CursorKing of Clang.
 
 * MacroInstantiation
-```vim
-hi link MacroInstantiation Macro
-```
+	```vim
+	hi link MacroInstantiation Macro
+	```
 
 * TypeRef
-```vim
-hi link TypeRef Type
-```
+	```vim
+	hi link TypeRef Type
+	```
 
 * StructDecl
-```vim
-hi link StructDecl Type
-```
+	```vim
+	hi link StructDecl Type
+	```
 
 * ClassDecl
-```vim
-hi link ClassDecl Type
-```
+	```vim
+	hi link ClassDecl Type
+	```
 
 * EnumDecl
-```vim
-hi link EnumDecl Type
-```
+	```vim
+	hi link EnumDecl Type
+	```
 
 * EnumConstantDecl
-```vim
-hi link EnumConstantDecl Identifier
-```
+	```vim
+	hi link EnumConstantDecl Identifier
+	```
 
 * DeclRefExpr
-```vim
-hi link DeclRefExpr Identifier
-```
+	```vim
+	hi link DeclRefExpr Identifier
+	```
 
 You can customize these colors in your colorscheme, for example:
 ```vim
