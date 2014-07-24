@@ -1,6 +1,6 @@
-if v:version < 703
+if v:version < 704 || !exists("*matchaddpos")
     echohl WarningMsg |
-                \ echomsg "Clighter unavailable: requires Vim 7.3+" |
+                \ echomsg "Clighter unavailable: requires Vim 7.4p330+" |
                 \ echohl None
     finish
 endif
@@ -13,13 +13,14 @@ if !has('python')
 endif
 
 if exists('g:loaded_clighter')
-      finish
+  finish
 endif
 
 let g:clighter_autostart = get(g:, 'clighter_autostart', 1)
 let g:clighter_clang_options = get(g:, 'clighter_clang_options', [])
-let g:clighter_window_size = get(g:, 'clighter_window_size', 0)
+let g:clighter_window_size = get(g:, 'clighter_window_size', 1)
 let g:clighter_libclang_file = get(g:, 'clighter_libclang_file', '')
+let g:clighter_realtime = get(g:, 'clighter_realtime', 1)
 
 command! ClighterEnable call clighter#Enable()
 command! ClighterDisable call clighter#Disable()
@@ -31,11 +32,10 @@ hi link StructDecl Type
 hi link ClassDecl Type
 hi link EnumDecl Type
 hi link EnumConstantDecl Identifier
-hi link DeclRefExpr Identifier
 
-augroup ClighterStart
-  au!
-  au VimEnter *.[ch],*.[ch]pp,*.objc if g:clighter_autostart == 1 | call clighter#Enable() | endif
-augroup END
+hi link EnumDeclRefExpr Identifier
+hi link CursorDefRef Search
 
-let g:loaded_clighter = 1
+if g:clighter_autostart == 1
+    call clighter#Init()
+endif

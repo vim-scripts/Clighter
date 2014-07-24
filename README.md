@@ -11,7 +11,7 @@ the semantic highlighting into the code.
 Clighter provides the following features:
 
 * Automatically do semantic highlighting for c-family source code.
-* Automatically mark all words that are same as the word under cursor
+* Automatically mark all words that with the same definition
 * Options to customize the colors
 
 ![clighter demo](http://goo.gl/ivfipF "Enable Clighter")
@@ -21,16 +21,16 @@ Clighter provides the following features:
 
 The clighter plugin requires the following:
 
-* Vim version 7.3(or above) with python2.x enabled
+* Vim version 7.4+ with python2.x enabled
 * libclang
 
-Clighter currently works only at linux platform, others have not been tested.
+Clighter has been tested in linux platform only
 
 
 ## Options
 
 ### g:clighter_autostart
-Clighter will automatically start with Vim if set g:clighter_autostart to 1,
+Clighter will automatically start with Vim if set g:clighter_autostart to `1`,
 otherwise, you have to manually start Clighter by ClighterEnable command.
 
 Default: `1`
@@ -42,16 +42,13 @@ let g:clighter_autostart = 0
 
 Clighter uses vim regular expression engine to do syntax highlighting,
 but vim's RE engine performs very bad when there are too many rules. Clighter
-can only highlight a given region instead of whole buffer each time to get
-the good performance even when the file is very large. 
+highlights a given region instead of whole buffer while cursor is moved, to get
+the good performance even when the buffer is very large. 
 	
-clighter_window_size < 0: highlight whole buffer.
+* `< 0`: highlight whole buffer.
+* `>= 0`: highlight from top line number reduce 100 * clighter_window_size to bottom line number plug 100 * clighter_window_size of screen.
 
-clighter_window_size >= 0: highlight from top line number reduce 30 *
-clighter_window_size to bottom line number plug 30 * clighter_window_size of
-screen.
-
-Default: `0`
+Default: `1`
 ```vim
 let g:clighter_window_size = -1 " whole buffer
 let g:clighter_window_size = 0 " highlight current screen of window
@@ -61,8 +58,7 @@ let g:clighter_window_size = 0 " highlight current screen of window
 
 The compiler options for Clang. Sometimes Clighter doesn't do correct
 highlighting cause Clang can't parse the source code without necessary
-options, so you need tell Clang how to parse the code. You can set the 
-compiler options to g:clighter_clang_options with list.
+options, so you need tell Clang how to parse the code.
 
 Default: `[]`
 ```vim
@@ -78,6 +74,18 @@ Default: `''`
 ```vim
 let g:clighter_libclang_file = '/usr/lib/libclang.so'
 ```
+### g:clighter_realtime
+
+Highlight the code in realtime(CursorMoved event), rather than when cursor is
+idle for a while(CursorHold event). By testing, a normal x86 machine can turn
+on the realtime highlighting without delay, however if you feel vim is
+delay, turn off this option.
+
+Default: `1`
+```vim
+let g:clighter_realtime = 1
+```
+
 ## Commands
 
 Clighter provides command to control it
@@ -130,9 +138,9 @@ Clighter defines the following syntax group corresponding to CursorKing of Clang
 	hi link EnumConstantDecl Identifier
 	```
 
-* DeclRefExpr
+* EnumDefRefExpr
 	```vim
-	hi link DeclRefExpr Identifier
+	hi link EnumDefRefExpr Identifier
 	```
 
 You can customize these colors in your colorscheme, for example:
@@ -145,15 +153,16 @@ You can customize these colors in your colorscheme, for example:
 ## FAQ
 
 ### The clighter plugin doesn't work.
-Vim version 7.3(or above) with python2.x is required, and make sure libclang is installed
+Vim version 7.4+ with python2.x is required, and make sure libclang is installed
 correctly and set g:clighter_libclang_file if need.
 
 ### Highlighting is not quick-response
 Clighter use CursorHold event to update the current window highlighting,
 and only highlight the code when parsing is done. To get the better response
-time, you can change updatetime smaller and pray your Clang run faster.
-Notice that many other plugins will change updatetime. If the code includes
-the header file that was modified, you must save the header.
+time, you can set g:clighter_realtime = 1, or change updatetime to a smaller
+value and pray your Clang run faster. Notice that many other plugins will
+change updatetime. If the code includes the header file that was modified,
+you must save the header.
 ```vim
 	set updatetime=1200
 ```
