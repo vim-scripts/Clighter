@@ -38,8 +38,9 @@ Clighter uses vim's regular expression(RE) engine to do syntax highlighting, how
 vim's RE engine performs bad while there are too many RE rules. To avoid too many RE
 rules, Clighter only highlights a given region(window) instead of whole buffer.
 	
-* `< 0`: highlight whole buffer.
-* `>= 0`: highlight from top line number reduce 100 * clighter_window_size to bottom line
+`<0`: highlight whole buffer.
+
+`>=0`: highlight from top line number reduce 100 * clighter_window_size to bottom line
 number plug 100 * clighter_window_size of screen.
 
 Default: `1`
@@ -76,6 +77,31 @@ Default: `1`
 let g:clighter_realtime = 1
 ```
 
+### g:clighter_rename_prompt_level
+The prompt level of rename refactoring.
+
+`0`: no prompt
+
+`1`: prompt while do cross buffer renaming
+
+`2`: prompt of each word that going to be replaced
+
+Default: `1`
+```vim
+let g:clighter_realtime = 1
+```
+
+### g:clighter_enable_cross_rename
+`0`: disable
+
+`1`: enable
+
+Default: `1`
+```vim
+let g:clighter_realtime = 1
+```
+
+
 ## Commands and Functions
 
 Clighter provides these commands and functions
@@ -93,8 +119,9 @@ Clighter provides these commands and functions
 	`ClighterToggleCursorHL`
 
 * Rename-refactor the variable/function name under vim cursor
-	* It's a experimental function
-	* It only processes the files that have been opened in vim's buffer list already.
+	* It's a experimental function and maybe not reliable
+	* It's not project based(only processes the files that have been opened in vim's
+	  buffer list already)
 	* Makesure that you have save all files before calling this function.
 
 	`clighter#Rename()`
@@ -168,6 +195,11 @@ you must save the header.
 	let g:clighter_realtime = 1
 	set updatetime=1200
 ```
+
+### Why rename-refactoring function is an experimental function
+Even though libclang provides many useful informations, it's not enough to do cross
+file rename-refactoring, so Clighter needs to use its own way way to 'guess' what should
+be renamed. Clighter can't gurantee the result of rename-factoring result is perfect.
 
 
 [1]: http://goo.gl/ncGLYC
