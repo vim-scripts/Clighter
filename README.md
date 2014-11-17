@@ -41,32 +41,15 @@ Default: `1`
 let g:clighter_autostart = 0
 ```
 
-### g:clighter_window_size
+### g:ClighterCompileArgs
 
-Clighter uses vim's regular expression(RE) engine to do syntax highlighting,
-but the RE engine performs not well while there are too many RE rules. To get
-the better performance, Clighter can highlights a given region(window) instead
-of whole buffer.
-	
-`<0`: highlight whole buffer.
+The compiler options for Clang. Clighter will pass these options to libclang to
+parse the code. Notice that bad options will cause clighter not working even
+crashing. For convenience, you can use vim session to remember this option.
 
-`>=0`: highlight from top line number reduce 100 * clighter_window_size to
-bottom line number plug 100 * clighter_window_size of screen.
-
-Default: `1`
+Default: `'["-Iinclude", "-x", "c++"]'`
 ```vim
-let g:clighter_window_size = -1 " whole buffer
-let g:clighter_window_size = 0 " highlight current screen of window
-```
-
-### g:clighter_clang_options
-
-The compiler options for Clang. Clighter will pass these options to libclang
-to parse the code.
-
-Default: `[-Iinclude]`
-```vim
-let g:clighter_clang_options = ['-std=c++', '-DLinux']
+let g:ClighterCompileArgs = '["-x", "c++", "-std=c++", "-DLinux"]'
 ```
 
 ### g:clighter_libclang_file
@@ -113,6 +96,23 @@ Default: `1`
 let g:clighter_enable_cross_rename = 1
 ```
 
+### g:clighter_highlight_groups
+Define the token type of syntax to highlight.
+
+Default:
+```vim
+['clighterMacroInstantiation', 'clighterStructDecl', 'clighterClassDecl', 'clighterEnumDecl', 'clighterEnumConstantDecl', 'clighterTypeRef', 'clighterDeclRefExprEnum']
+```
+
+### g:clighter_cursor_hl_default
+Enable cursor highlight by default
+
+Default: `1`
+```vim
+let g:clighter_cursor_hl_default = 0
+```
+
+
 
 ## Commands and Functions
 
@@ -142,6 +142,10 @@ Clighter provides these commands and functions.
 	```vim
     nmap <silent> <Leader>r :call clighter#Rename()<CR>
 	```
+
+* Set clang compile args in runtime
+
+	`call clighter#SetCompileArgs()`
 
 
 ## Customize Colors
@@ -185,7 +189,27 @@ Clighter defines these syntax groups corresponding to CursorKind of libclang.
 
 * clighterCursorDefRef
 	```vim
-	hi link clighterCursorDefRef Search
+	hi link clighterCursorDefRef IncSearch
+	```
+
+* clighterFunctionDecl
+	```vim
+	hi link clighterFunctionDecl None
+	```
+
+* clighterDeclRefExprCall
+	```vim
+	hi link clighterDeclRefExprCall None
+	```
+
+* clighterMemberRefExpr
+	```vim
+	hi link clighterMemberRefExpr None
+	```
+
+* clighterNamespace
+	```vim
+	hi link clighterNamespace None
 	```
 
 You can customize these colors in your colorscheme, for example:

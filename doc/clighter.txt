@@ -62,12 +62,13 @@ Untar the clighter.tar.gz to your vim path.
 5. Options~
 
 |'g:clighter_autostart'|		Enable the Clighter when vim start
-|'g:clighter_window_size'|		Window size for highlighting
-|'g:clighter_clang_options'|		The Compile options for Clang
+|'g:ClighterCompileArgs'|		The Compile options for Clang
 |'g:clighter_libclang_file'|		The file path of the libclang
 |'g:clighter_realtime'|			Update highlighting in realtime	
 |'g:clighter_rename_prompt_level'|	Set prompt level of rename-refactoring
 |'g:clighter_enable_cross_rename'|	Enable cross buffer rename-refactoring
+|'g:clighter_highlight_groups'|		Enabled syntax highlight group
+|'g:clighter_cursor_hl_default'|	Enable cursor highlight by default
 
 						*'clighter_autostart'*
 g:clighter_autostart~
@@ -77,32 +78,15 @@ Default: `1`
 >
 	let g:clighter_autostart = 0
 <
+						*'ClighterCompileArgs'*
+g:ClighterCompileArgs~
+The compiler options for Clang. Clighter will pass these options to libclang to
+parse the code. Notice that bad options will cause clighter not working even
+crashing. For convenience, you can use vim session to remember this option.
 
-						*'clighter_window_size'*
-g:clighter_window_size~
-Clighter uses vim's regular expression(RE) engine to do syntax highlighting,
-but the RE engine performs not well while there are too many RE rules. To get
-the better performance, Clighter can highlights a given region(window) instead
-of whole buffer.
-	
-`<0`: highlight whole buffer.
-
-`>=0`: highlight from top line number reduce 100 * clighter_window_size to
-bottom line number plug 100 * clighter_window_size of screen.
-
-Default: `1`
+Default: '["-Iinclude", "-x", "c++"]'
 >
-	let g:clighter_window_size = -1 " whole buffer
-	let g:clighter_window_size = 0 " highlight current screen of window
-<
-						*'clighter_clang_options'*
-g:clighter_clang_options~
-The compiler options for Clang. Clighter will pass these options to libclang
-to parse the code.
-
-Default: `[-Iinclude]`
->
-	let g:clighter_clang_options = ['-std=c++', '-DLinux']
+	let g:ClighterCompileArgs = '["-x", "c++", "-std=c++", "-DLinux"]'
 <
 						*'clighter_libclang_file'*
 g:clighter_libclang_file~
@@ -144,10 +128,26 @@ Default: `1`
 	let g:clighter_enable_cross_rename = 1
 <
 
+g:clighter_highlight_groups~
+Define the token type of syntax to highlight.
+
+
+Default:
+>
+	['clighterMacroInstantiation', 'clighterStructDecl', 'clighterClassDecl', 'clighterEnumDecl', 'clighterEnumConstantDecl', 'clighterTypeRef', 'clighterDeclRefExprEnum']
+<
+
+g:clighter_cursor_hl_default~
+Enable cursor highlight by default
+
+Default: `1`
+>
+	let g:clighter_cursor_hl_default = 0
+<
 
 ==============================================================================
 						*clighter-commands*
-6. Commands~
+6. Commands ~
 Clighter provides these commands and functions.
 
 Enable Clighter~
@@ -176,7 +176,10 @@ Rename-refactor~
 >
     	nmap <silent> <Leader>r :call clighter#Rename()<CR>
 >
-
+Set clang compile args in runtime~
+>
+    	call clighter#SetCompileArgs()
+>
 
 ==============================================================================
 						*clighter-colors*
@@ -220,10 +223,25 @@ clighterDeclRefExprEnum~
 
 clighterCursorDefRef~
 >
-	hi link clighterCursorDefRef Search
+	hi link clighterCursorDefRef IncSearch
+
+clighterFunctionDecl~
+>
+	hi link clighterFunctionDecl None
+
+clighterDeclRefExprCall~
+>
+	hi link clighterDeclRefExprCall None
+
+clighterMemberRefExpr~
+>
+	hi link clighterMemberRefExpr None
+
+clighterNamespace~
+>
+	hi link clighterNamespace None
 
 >
-
 You can customize these colors in your colorscheme, for example:
 >
 	hi clighterTypeRef term=NONE cterm=NONE ctermbg=232 ctermfg=255 gui=NONE

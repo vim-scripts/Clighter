@@ -4,21 +4,14 @@ py import vim
 exe 'python sys.path = sys.path + ["' . s:script_folder_path . '/../misc"]'
 py import clighter
 
-augroup ClighterEnable
-let s:cursor_decl_ref_hl_on = 1
+let s:cursor_hl = g:clighter_cursor_hl_default
 
 fun! clighter#ToggleCursorHL()
-    if s:cursor_decl_ref_hl_on==1
-        let s:cursor_decl_ref_hl_on=0
-        call s:clear_match_grp(['clighterMacroInstantiation', 'clighterStructDecl', 'clighterClassDecl', 'clighterEnumDecl', 'clighterEnumConstantDecl', 'clighterTypeRef', 'clighterDeclRefExprEnum', 'clighterCursorDefRef'])
-    else
-        let s:cursor_decl_ref_hl_on=1
-        "augroup CursorHighlight
-            "au CursorHold * exe printf('match IncSearch /\V\<%s\>/', escape(expand('<cword>'), '/\'))
-            "au CursorMoved * match none
-            ""au CursorHold * let @/ = '\V\<'.escape(expand('<cword>'), '\').'\>'
-        "augroup END
+    if s:cursor_hl==1
+        py clighter.clear_def_ref()
     endif
+
+    let s:cursor_hl = !s:cursor_hl
 endf
 
 fun! s:clear_match_grp(groups)
@@ -37,52 +30,59 @@ fun! s:clear_match_pri(pri)
     endfor
 endf
 
-fun! s:on_buf_win_leave()
-    call s:clear_match_pri([{0}, {1}])".format(DEF_REF_PRI, TOKEN_PRI))
-endf
-
-
 fun! clighter#Enable()
+    silent! au! ClighterAutoStart
 
-    if !exists("s:clang_initialized")
-        py clighter.ClangService.init()
-        if !exists("s:clang_initialized")
-            echohl WarningMsg |
-                        \ echomsg "Clighter unavailable: cannot enable clighter, try set g:clighter_libclang_file" |
-                        \ echohl None
-            return
-        endif
+    if exists("s:clang_initialized")
+        return
     endif
+
+    if !pyeval('clighter.clang_start_service()')
+        echohl WarningMsg |
+                    \ echomsg "Clighter unavailable: cannot enable clighter, try set g:clighter_libclang_file" |
+                    \ echohl None
+        return
+    endif
+
+    py clighter.clang_create_all_tu()
 
     augroup ClighterEnable
         au!
         if g:clighter_realtime == 1
-            au CursorMoved *.[ch],*.[ch]pp,*.m py clighter.highlight_window()
-            au CursorMovedI *.[ch],*.[ch]pp,*.m py clighter.highlight_window()
-            au TextChanged *.[ch],*.[ch]pp,*.m py clighter.ClangService.update_unsaved()
-            au TextChangedI *.[ch],*.[ch]pp,*.m py clighter.ClangService.update_unsaved()
+            au CursorMoved * py clighter.highlight_window()
+            au CursorMovedI * py clighter.highlight_window()
+            au TextChanged * py clighter.on_TextChanged()
+            au TextChangedI * py clighter.on_TextChanged()
         else
-            au CursorHold *.[ch],*.[ch]pp,*.m py clighter.ClangService.update_unsaved()
-            au CursorHoldI *.[ch],*.[ch]pp,*.m py clighter.ClangService.update_unsaved()
+            au CursorHold * py clighter.on_TextChanged()
+            au CursorHoldI * py clighter.on_TextChanged()
         endif
-        au CursorHold *.[ch],*.[ch]pp,*.m py clighter.highlight_window()
-        au CursorHoldI *.[ch],*.[ch]pp,*.m py clighter.highlight_window()
-        au BufWinEnter * py clighter.unhighlight_window()
-        au BufWinEnter *.[ch],*.[ch]pp,*.m py clighter.highlight_window()
-        au BufRead *.[ch],*.[ch]pp,*.m py clighter.ClangService.add_vim_buffer()
-        au BufNewFile *.[ch],*.[ch]pp,*.m py clighter.ClangService.add_vim_buffer()
-        au VimLeavePre * py clighter.ClangService.release()
+        au CursorHold * py clighter.highlight_window()
+        au CursorHoldI * py clighter.highlight_window()
+        " workaround to rehighlight while split window
+        au WinEnter * py clighter.clear_highlight()
+        au BufWinEnter * py clighter.clear_highlight()
+        au FileType * py clighter.on_FileType()
+        au VimLeavePre * py clighter.clang_stop_service()
     augroup END
+
+    let s:clang_initialized=1
 endf
 
 fun! clighter#Disable()
-    au! ClighterEnable
-    py clighter.ClangService.release()
+    silent! au! ClighterEnable
+    py clighter.clang_stop_service()
+    silent! unlet s:clang_initialized
     let a:wnr = winnr()
-    windo call s:clear_match_grp(['clighterMacroInstantiation', 'clighterStructDecl', 'clighterClassDecl', 'clighterEnumDecl', 'clighterEnumConstantDecl', 'clighterTypeRef', 'clighterDeclRefExprEnum', 'clighterCursorDefRef'])
+    windo py clighter.clear_highlight()
     exe a:wnr."wincmd w"
 endf
 
 fun! clighter#Rename()
     py clighter.refactor_rename()
+endf
+
+fun! clighter#SetCompileArgs(str_args)
+    let g:ClighterCompileArgs = a:str_args
+    py clighter.clang_set_compile_args(eval(vim.bindeval('a:str_args')))
 endf
