@@ -4,14 +4,12 @@ py import vim
 exe 'python sys.path = sys.path + ["' . s:script_folder_path . '/../misc"]'
 py import clighter
 
-let s:cursor_hl = g:clighter_cursor_hl_default
-
 fun! clighter#ToggleCursorHL()
-    if s:cursor_hl==1
+    if g:ClighterCursorHL==1
         py clighter.clear_def_ref()
     endif
 
-    let s:cursor_hl = !s:cursor_hl
+    let g:ClighterCursorHL = !g:ClighterCursorHL
 endf
 
 fun! s:clear_match_grp(groups)
@@ -44,24 +42,25 @@ fun! clighter#Enable()
         return
     endif
 
-    py clighter.clang_create_all_tu()
+    py clighter.clang_switch_buffer()
+    py clighter.clang_create_all_tu_ctx()
 
     augroup ClighterEnable
         au!
         if g:clighter_realtime == 1
             au CursorMoved * py clighter.highlight_window()
             au CursorMovedI * py clighter.highlight_window()
-            au TextChanged * py clighter.on_TextChanged()
-            au TextChangedI * py clighter.on_TextChanged()
+            au TextChanged * py clighter.update_unsaved_if_allow()
+            au TextChangedI * py clighter.update_unsaved_if_allow()
         else
-            au CursorHold * py clighter.on_TextChanged()
-            au CursorHoldI * py clighter.on_TextChanged()
+            au CursorHold * py clighter.update_unsaved_if_allow()
+            au CursorHoldI * py clighter.update_unsaved_if_allow()
         endif
         au CursorHold * py clighter.highlight_window()
         au CursorHoldI * py clighter.highlight_window()
-        " workaround to rehighlight while split window
-        au WinEnter * py clighter.clear_highlight()
-        au BufWinEnter * py clighter.clear_highlight()
+        au WinEnter * py clighter.clang_switch_buffer()
+        au BufEnter * py clighter.clang_switch_buffer()
+        au SessionLoadPost * py clighter.clang_switch_buffer()
         au FileType * py clighter.on_FileType()
         au VimLeavePre * py clighter.clang_stop_service()
     augroup END
